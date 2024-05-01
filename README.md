@@ -9,5 +9,5 @@ Simple node graph implementation.
 npm install
 
 npx tsc --init
-node out/index.js
+node out/index.ts
 ```
