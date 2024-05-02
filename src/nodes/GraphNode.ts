@@ -1,4 +1,4 @@
-import { Type, Dependency, DumpDotStyle } from "../lib";
+import { Type, Dependency, DumpDotNodeStyle } from "../lib";
 
 /**
  * Represents a node in a directed graph.
@@ -36,7 +36,7 @@ export default abstract class GraphNode {
   /**
    * Get the style for the node when dumping to DOT format.
    */
-  public abstract get dumpDotStyle(): DumpDotStyle;
+  public abstract get dumpDotStyle(): DumpDotNodeStyle;
 
   /**
    * Get the DOT attribute string for the node.

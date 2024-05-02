@@ -14,9 +14,14 @@ enum BuiltinType {
 type Type = string;
 type Dependency = GraphNode | undefined | null;
 
-interface DumpDotStyle {
+interface DumpDotNodeStyle {
   label: (name: string) => string;
   attrs: { [key: string]: string };
+}
+
+interface DumpDotGlobalStyle {
+  node: { [key: string]: string };
+  edge: { [key: string]: string };
 }
 
 export {
@@ -29,7 +34,8 @@ export {
   // Types
   Type,
   Dependency,
-  DumpDotStyle,
+  DumpDotNodeStyle,
+  DumpDotGlobalStyle,
 
   // Utils
   BuiltinType,

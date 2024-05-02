@@ -1,5 +1,5 @@
 import GraphNode from "./GraphNode";
-import { Type, Dependency, DumpDotStyle } from "../lib";
+import { Type, Dependency, DumpDotNodeStyle } from "../lib";
 
 /** Represents a mapping from a set of inputs to an output. */
 export default class ProcessorNode extends GraphNode {
@@ -29,13 +29,12 @@ export default class ProcessorNode extends GraphNode {
     return "Processor";
   }
 
-  public get dumpDotStyle(): DumpDotStyle {
+  public get dumpDotStyle(): DumpDotNodeStyle {
     return {
       label: (name) => `${name}`,
       attrs: {
         shape: "box",
         color: "lightskyblue",
-        style: "filled",
       },
     };
   }

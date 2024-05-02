@@ -1,5 +1,5 @@
 import GraphNode from "./nodes/GraphNode";
-import { Type } from "./lib";
+import { DumpDotGlobalStyle, Type } from "./lib";
 
 /** Represents a directed graph that guarantees the absence of cycles on use. */
 export default class Graph {
@@ -168,6 +168,17 @@ export default class Graph {
     postfix?.(node);
   }
 
+  public get dumpDotStyle(): DumpDotGlobalStyle {
+    return {
+      node: {
+        fontname: "Arial",
+      },
+      edge: {
+        fontname: "Arial",
+      },
+    };
+  }
+
   /**
    * Dump the graph in the DOT format.
    * @throws If a node input is not part of the graph.
@@ -177,6 +188,14 @@ export default class Graph {
     const dump: string[] = ["digraph G {"];
 
     if (this.nodes.size > 0) {
+      // Global style defaults
+      Object.entries(this.dumpDotStyle).forEach(([type, attrs]) => {
+        const formattedAttrs = Object.entries(attrs)
+          .map(([k, v]) => `${k}=${v}`)
+          .join(" ");
+        dump.push(`\t${type} [${formattedAttrs}]`);
+      });
+
       // Declare nodes
       dump.push("\t{");
       for (const [name, node] of this.nodes) {

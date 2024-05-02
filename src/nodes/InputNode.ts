@@ -1,5 +1,5 @@
 import GraphNode from "./GraphNode";
-import { Type, DumpDotStyle } from "../lib";
+import { Type, DumpDotNodeStyle } from "../lib";
 
 /** Represents a node that outputs a constant value. */
 export default class InputNode extends GraphNode {
@@ -18,13 +18,12 @@ export default class InputNode extends GraphNode {
     return "Input";
   }
 
-  public get dumpDotStyle(): DumpDotStyle {
+  public get dumpDotStyle(): DumpDotNodeStyle {
     return {
       label: (name) => `${name}: ${this.value}`,
       attrs: {
         shape: "invtrapezium",
         color: "goldenrod",
-        style: "filled",
       },
     };
   }
