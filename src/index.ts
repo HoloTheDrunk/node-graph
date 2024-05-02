@@ -22,6 +22,8 @@ logSection("Graph before adding nodes", g, "2", (s) =>
   console.dir(s, { depth: null }),
 );
 
+// ======================== Adding nodes ==========================
+
 // Keeping outside references to relevant nodes makes the code more readable.
 // Could also make Graph::set(_grouped) return the node(s).
 const five = new graph.InputNode(
@@ -52,12 +54,16 @@ logSection("Graph after adding nodes", g, "2", (s) =>
   console.dir(s, { depth: null }),
 );
 
+// =========================== Running ============================
+
 // Getting the output from the graph instead of directly from a node
 // allows us to check the validity of the graph for the user.
-// Equivalent to `succ.getOutput(0, "succ")` in this case.
+// Equivalent to `succ.getOutput(0)` with validation.
 const output = g.getOutput(0, succ);
 
 logSection("Output", output, "1");
+
+// ======================== Dumping to DOT ========================
 
 const dumpDot = g.dumpDot();
 const dumpDotLink = ((dot: string): string => {
