@@ -9,6 +9,11 @@ enum BuiltinType {
 type Type = string;
 type Dependency = GraphNode | undefined | null;
 
+interface DumpDotStyle {
+  label: (name: string) => string;
+  attrs: { [key: string]: string };
+}
+
 abstract class GraphNode {
   public inputs: Map<string, Dependency>;
   public outputType: Type;
@@ -36,6 +41,21 @@ abstract class GraphNode {
     }
     return this._out[1];
   }
+
+  public abstract get dumpDotStyle(): DumpDotStyle;
+
+  public dumpDotAttr(name: string): string {
+    const { label, attrs } = this.dumpDotStyle;
+    const formattedAttrs = Object.entries(attrs)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(" ");
+
+    return `[label="${label(name)}" ${formattedAttrs}]`;
+  }
+
+  public dumpDotEdgeAttr(): string {
+    return `[label=" ${this.outputType}"]`;
+  }
 }
 
 class InputNode extends GraphNode {
@@ -52,6 +72,16 @@ class InputNode extends GraphNode {
 
   protected _node_type(): string {
     return "Input";
+  }
+
+  public get dumpDotStyle(): DumpDotStyle {
+    return {
+      label: (name) => `${name}: ${this.value}`,
+      attrs: {
+        shape: "invtrapezium",
+        color: "goldenrod",
+      },
+    };
   }
 }
 
@@ -81,6 +111,16 @@ class ProcessorNode extends GraphNode {
   protected _node_type(): string {
     return "Processor";
   }
+
+  public get dumpDotStyle(): DumpDotStyle {
+    return {
+      label: (name) => `${name}`,
+      attrs: {
+        shape: "box",
+        color: "lightskyblue",
+      },
+    };
+  }
 }
 
 /** Represents a directed graph that guarantees the absence of cycles on use. */
@@ -97,6 +137,36 @@ class Graph {
 
   public get valid(): boolean {
     return this._valid;
+  }
+
+  public dumpDot(): string {
+    const dump: string[] = ["digraph G {"];
+
+    if (this.nodes.size > 0) {
+      // Declare nodes
+      dump.push("\t{");
+      for (const [name, node] of this.nodes) {
+        dump.push(`\t\t"${name}" ${node.dumpDotAttr(name)};`);
+      }
+      dump.push("\t}");
+
+      // Declare edges
+      const entries = Array.from(this.nodes.entries());
+      for (const [name, node] of this.nodes) {
+        for (const [_, dep] of node.inputs) {
+          if (dep == null) continue;
+
+          const inputName = entries.find(([_, oNode]) => oNode == dep)![0];
+          const attrs = node.dumpDotEdgeAttr();
+
+          dump.push(`\t"${inputName}" -> "${name}" ${attrs};`);
+        }
+      }
+    }
+
+    dump.push("}");
+
+    return dump.join("\n");
   }
 
   /**

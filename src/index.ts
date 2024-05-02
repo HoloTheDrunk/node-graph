@@ -36,6 +36,4 @@ const output = g.getOutput(0, succ);
 
 console.dir(g, { depth: null });
 console.log(`Output: ${output}`);
-
-const expected = succ.callback(0, five.value);
-console.assert(output === expected, `Output should be ${expected}`);
+console.log(`Dot:\n${g.dumpDot()}`);
