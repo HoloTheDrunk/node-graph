@@ -134,6 +134,21 @@ class Graph {
   }
 
   /**
+   * Add or update multiple nodes at once. Check the documentation of {@link set}
+   * for more details.
+   * @returns A map of the results of the set operation.
+   */
+  public set_grouped(nodes: {
+    [name: string]: GraphNode;
+  }): Map<string, boolean> {
+    const results = new Map();
+    for (const [name, node] of Object.entries(nodes)) {
+      results.set(name, this.set(name, node));
+    }
+    return results;
+  }
+
+  /**
    * Determine if the graph is valid. A graph is considered valid if it does
    * not contain cycles nor dangling dependencies.
    */

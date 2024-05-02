@@ -12,8 +12,10 @@ const succ = new graph.ProcessorNode(
   (_frame, args) => (args.value as number) + 1,
 );
 
-g.set("five", five);
-g.set("succ", succ);
+// These two methods are equivalent.
+// g.set("five", five);
+// g.set("succ", succ);
+g.set_grouped({ five, succ });
 
 g.validate();
 
