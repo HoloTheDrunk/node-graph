@@ -13,7 +13,7 @@ abstract class GraphNode {
   public inputs: Map<string, Dependency>;
   public outputType: Type;
 
-  private _out: [Number, any | undefined];
+  private _out: [number, any | undefined];
 
   public constructor(inputs: Map<string, Dependency>, outputType: Type) {
     this.inputs = inputs;
@@ -21,7 +21,7 @@ abstract class GraphNode {
     this._out = [-1, undefined];
   }
 
-  protected _apply(_frame: Number): any {
+  protected _apply(_frame: number): any {
     throw new Error(`Unimplemented _apply() for ${this._node_type()}Node`);
   }
 
@@ -29,7 +29,7 @@ abstract class GraphNode {
     throw new Error("Unimplemented _node_type()");
   }
 
-  public getOutput(frame: Number): any {
+  public getOutput(frame: number): any {
     const [oFrane, oValue] = this._out;
     if (oValue == undefined || oFrane !== frame) {
       this._out = [frame, this._apply(frame)];
@@ -46,7 +46,7 @@ class InputNode extends GraphNode {
     this.value = value;
   }
 
-  protected _apply(_frame: Number): any {
+  protected _apply(_frame: number): any {
     return this.value;
   }
 
@@ -56,18 +56,18 @@ class InputNode extends GraphNode {
 }
 
 class ProcessorNode extends GraphNode {
-  public callback: (frame: Number, args: any) => any;
+  public callback: (frame: number, args: any) => any;
 
   public constructor(
-    inputs: Map<string, Dependency>,
+    inputs: { [name: string]: Dependency },
     outputType: Type,
-    callback: (frame: Number, args: any) => any,
+    callback: (frame: number, args: any) => any,
   ) {
-    super(inputs, outputType);
+    super(new Map(Object.entries(inputs)), outputType);
     this.callback = callback;
   }
 
-  protected _apply(frame: Number): any {
+  protected _apply(frame: number): any {
     const inputs = Array.from(this.inputs) ?? [];
     const args: [string, any][] = inputs.map(([name, dependency]) => [
       name,
@@ -95,6 +95,28 @@ class Graph {
     this._valid = false;
   }
 
+  public get valid(): boolean {
+    return this._valid;
+  }
+
+  /**
+   * Get the output of a node at a given frame.
+   * @throws If the graph is invalid.
+   * @throws If the node does not exist.
+   * @returns The output of the node at the given frame.
+   */
+  public getOutput(frame: number, node: string | GraphNode): any {
+    this.validate();
+
+    const out = typeof node === "string" ? this.nodes.get(node) : node;
+
+    if (out == undefined) {
+      throw new Error(`Node ${node} does not exist`);
+    }
+
+    return out.getOutput(frame);
+  }
+
   /**
    * Get a node by name.
    * @returns The node with the given name.
@@ -105,27 +127,15 @@ class Graph {
 
   /**
    * Add or update a node. If the node already exists, it will be updated.
-   * Orphaned nodes will not be added if the graph has at least one node already.
+   * @throws If the node is orphaned and the graph has at least one node already.
    * @returns True if the node was added or updated, false otherwise.
    */
-  public set(
-    name: string,
-    node: GraphNode,
-    children: GraphNode[] = [],
-  ): boolean {
-    if (
-      this.nodes.size > 0 &&
-      node.inputs.size === 0 &&
-      children.length === 0
-    ) {
-      return false;
+  public set(name: string, node: GraphNode): boolean {
+    if (this.nodes.size > 0 && node.inputs.size === 0) {
+      throw new Error("Orphaned node");
     }
 
     this._valid = false;
-
-    for (const child of children) {
-      child.inputs.set(name, node);
-    }
 
     this.nodes.set(name, node);
     this.types.add(node.outputType);
@@ -136,6 +146,9 @@ class Graph {
   /**
    * Add or update multiple nodes at once. Check the documentation of {@link set}
    * for more details.
+   * Using numerical object keys is not recommended, as they will be automatically sorted,
+   * possibly leading to unexpected behavior.
+   * @throws If any of the nodes are orphaned and the graph has at least one node already.
    * @returns A map of the results of the set operation.
    */
   public set_grouped(nodes: {
@@ -151,6 +164,7 @@ class Graph {
   /**
    * Determine if the graph is valid. A graph is considered valid if it does
    * not contain cycles nor dangling dependencies.
+   * @throws If the graph is invalid.
    */
   public validate() {
     if (this._valid) {
@@ -171,12 +185,13 @@ class Graph {
 
   /**
    * Depth-first search for cycles and dangling dependencies.
+   * @throws If a cycle is detected or a dangling dependency is found.
    */
   private _validation_dfs(
     node: GraphNode,
     path: Set<string>,
     visited: Set<string>,
-  ): boolean {
+  ) {
     // Cycle detection
     for (const [name, _dep] of node.inputs ?? []) {
       if (path.has(name)) {
@@ -201,8 +216,6 @@ class Graph {
       this._validation_dfs(dep, path, visited);
       path.delete(name);
     }
-
-    return false;
   }
 
   /** Depth-first traversal of the graph. */
@@ -221,11 +234,17 @@ class Graph {
         continue;
       }
 
+      // Run the infix between every dependency
       if (index < inputs.size - 1) {
         infix?.(node);
       }
 
       index++;
+    }
+
+    // Run the infix at least once per node even without dependencies
+    if (inputs.size <= 1) {
+      infix?.(node);
     }
 
     postfix?.(node);
@@ -235,9 +254,13 @@ class Graph {
 type NodeCallback = (node: GraphNode) => void;
 type StringCallback = (string: string) => void;
 interface DfsCallbacks {
+  /** Run before the dependencies. */
   prefix?: NodeCallback;
+  /** Run between every dependency or once if less than 2 dependencies. */
   infix?: NodeCallback;
+  /** Run after the dependencies. */
   postfix?: NodeCallback;
+  /** Run when an undefined dependency is found. */
   undef?: StringCallback;
 }
 
