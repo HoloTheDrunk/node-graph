@@ -1,10 +1,29 @@
 import * as graph from "./lib";
 
+// Util
+function logSection(
+  title: string,
+  content: any,
+  ansiColor: string,
+  func?: (content: any) => void,
+) {
+  console.log(`\n\x1b[1;33m${title}\x1b[0m`);
+  if (func) {
+    func(content);
+  } else {
+    console.log(`\x1b[${ansiColor}m${content}\x1b[0m`);
+  }
+}
+
+console.log("Goal: (\\x -> succ x) 5");
+
 const g = new graph.Graph();
-console.dir(g, { depth: null });
+logSection("Graph before adding nodes", g, "2", (s) =>
+  console.dir(s, { depth: null }),
+);
 
 // Keeping outside references to relevant nodes makes the code more readable.
-// Could also make Graph::set(_grouped)? return the node(s).
+// Could also make Graph::set(_grouped) return the node(s).
 const five = new graph.InputNode(
   // Value
   5,
@@ -29,11 +48,26 @@ try {
   console.error(`Invalid set_grouped call: ${e}`);
 }
 
+logSection("Graph after adding nodes", g, "2", (s) =>
+  console.dir(s, { depth: null }),
+);
+
 // Getting the output from the graph instead of directly from a node
 // allows us to check the validity of the graph for the user.
 // Equivalent to `succ.getOutput(0, "succ")` in this case.
 const output = g.getOutput(0, succ);
 
-console.dir(g, { depth: null });
-console.log(`Output: ${output}`);
-console.log(`Dot:\n${g.dumpDot()}`);
+logSection("Output", output, "1");
+
+const dumpDot = g.dumpDot();
+const dumpDotLink = ((dot: string): string => {
+  const escaped = dot
+    .replaceAll(/\s+/g, " ")
+    .replaceAll(":", "%3A")
+    .replaceAll(";", "%3B")
+    .replaceAll("=", "%3D");
+  return `https://dreampuf.github.io/GraphvizOnline/#${escaped}`;
+})(dumpDot);
+
+logSection("Dot", dumpDot, "2");
+logSection("GraphViz", dumpDotLink, "36");
