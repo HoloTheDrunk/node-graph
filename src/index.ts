@@ -1,4 +1,4 @@
-import * as graph from "./graph";
+import * as graph from "./lib";
 
 const g = new graph.Graph();
 console.dir(g, { depth: null });
