@@ -1,6 +1,7 @@
 import GraphNode from "./GraphNode";
 import { Type, Dependency, DumpDotStyle } from "../lib";
 
+/** Represents a mapping from a set of inputs to an output. */
 export default class ProcessorNode extends GraphNode {
   public callback: (frame: number, args: any) => any;
 
@@ -24,7 +25,7 @@ export default class ProcessorNode extends GraphNode {
     return this.callback(frame, argObj);
   }
 
-  protected _node_type(): string {
+  protected get _node_type(): string {
     return "Processor";
   }
 

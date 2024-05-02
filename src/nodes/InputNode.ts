@@ -1,6 +1,7 @@
 import GraphNode from "./GraphNode";
 import { Type, DumpDotStyle } from "../lib";
 
+/** Represents a node that outputs a constant value. */
 export default class InputNode extends GraphNode {
   public value: any;
 
@@ -13,7 +14,7 @@ export default class InputNode extends GraphNode {
     return this.value;
   }
 
-  protected _node_type(): string {
+  protected get _node_type(): string {
     return "Input";
   }
 

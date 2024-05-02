@@ -17,36 +17,6 @@ export default class Graph {
     return this._valid;
   }
 
-  public dumpDot(): string {
-    const dump: string[] = ["digraph G {"];
-
-    if (this.nodes.size > 0) {
-      // Declare nodes
-      dump.push("\t{");
-      for (const [name, node] of this.nodes) {
-        dump.push(`\t\t"${name}" ${node.dumpDotAttr(name)};`);
-      }
-      dump.push("\t}");
-
-      // Declare edges
-      const entries = Array.from(this.nodes.entries());
-      for (const [name, node] of this.nodes) {
-        for (const [_, dep] of node.inputs) {
-          if (dep == null) continue;
-
-          const inputName = entries.find(([_, oNode]) => oNode == dep)![0];
-          const attrs = node.dumpDotEdgeAttr();
-
-          dump.push(`\t"${inputName}" -> "${name}" ${attrs};`);
-        }
-      }
-    }
-
-    dump.push("}");
-
-    return dump.join("\n");
-  }
-
   /**
    * Get the output of a node at a given frame.
    * @throws If the graph is invalid.
@@ -196,6 +166,49 @@ export default class Graph {
     }
 
     postfix?.(node);
+  }
+
+  /**
+   * Dump the graph in the DOT format.
+   * @throws If a node input is not part of the graph.
+   * @returns The graph in the DOT format.
+   */
+  public dumpDot(): string {
+    const dump: string[] = ["digraph G {"];
+
+    if (this.nodes.size > 0) {
+      // Declare nodes
+      dump.push("\t{");
+      for (const [name, node] of this.nodes) {
+        dump.push(`\t\t"${name}" ${node.dumpDotAttr(name)};`);
+      }
+      dump.push("\t}");
+
+      // Declare edges
+      const entries = Array.from(this.nodes.entries());
+      for (const [name, node] of this.nodes) {
+        for (const [_, dep] of node.inputs) {
+          if (dep == null) continue;
+
+          // PERF: Inefficient but the alternative is duplicating the names
+          // inside the nodes and that makes the API much heavier so we'll
+          // live with it, this will likely never be an issue.
+          const inputName = entries.find(([_, oNode]) => oNode == dep)?.[0];
+          if (inputName == undefined) {
+            throw new Error(
+              `An input of node ${name} is not part of the graph`,
+            );
+          }
+          const attrs = node.dumpDotEdgeAttr();
+
+          dump.push(`\t"${inputName}" -> "${name}" ${attrs};`);
+        }
+      }
+    }
+
+    dump.push("}");
+
+    return dump.join("\n");
   }
 }
 
