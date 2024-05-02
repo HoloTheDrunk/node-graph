@@ -24,6 +24,7 @@ export default class InputNode extends GraphNode {
       attrs: {
         shape: "invtrapezium",
         color: "goldenrod",
+        style: "filled",
       },
     };
   }

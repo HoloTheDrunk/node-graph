@@ -35,6 +35,7 @@ export default class ProcessorNode extends GraphNode {
       attrs: {
         shape: "box",
         color: "lightskyblue",
+        style: "filled",
       },
     };
   }
